@@ -8,7 +8,6 @@
 #include <esp_mn_models.h>
 #include <esp_mn_speech_commands.h>
 #include <cJSON.h>
-#include <cmath>
 
 #define TAG "CustomWakeWord"
 
@@ -168,16 +167,6 @@ void CustomWakeWord::Feed(const std::vector<int16_t>& data) {
     while (input_buffer_.size() >= chunksize) {
         std::vector<int16_t> chunk(input_buffer_.begin(), input_buffer_.begin() + chunksize);
         StoreWakeWordData(chunk);
-
-        // DEBUG: report mic level so we can tell "no audio" from "no match"
-        {
-            static int dbg_count = 0;
-            if ((++dbg_count % 60) == 0) {
-                double acc = 0;
-                for (auto s : chunk) acc += (double)s * s;
-                ESP_LOGI(TAG, "mic rms=%d chunk=%d", (int)sqrt(acc / chunk.size()), chunksize);
-            }
-        }
 
         esp_mn_state_t mn_state = multinet_->detect(multinet_model_data_, chunk.data());
         

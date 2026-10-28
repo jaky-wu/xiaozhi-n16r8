@@ -1,0 +1,36 @@
+name: Build one board
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py set-target esp32s3
+          idf.py build
+
+      - name: Show sizes
+        shell: bash
+        run: |
+          ls -l build/xiaozhi.bin build/bootloader/bootloader.bin build/partition_table/partition-table.bin
+
+      - name: Upload bins
+        uses: actions/upload-artifact@v4
+        with:
+          name: xiaozhi-bins
+          path: |
+            build/bootloader/bootloader.bin
+            build/partition_table/partition-table.bin
+            build/xiaozhi.bin

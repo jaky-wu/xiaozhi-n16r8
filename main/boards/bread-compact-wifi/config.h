@@ -1,0 +1,51 @@
+#ifndef _BOARD_CONFIG_H_
+#define _BOARD_CONFIG_H_
+
+#include <driver/gpio.h>
+
+// ESP32-S3-N16R8 + ES8311 codec (duplex I2S)
+// 引脚依据卖家"引脚分布.xlsx"的功能列
+#define AUDIO_INPUT_SAMPLE_RATE  24000
+#define AUDIO_OUTPUT_SAMPLE_RATE 24000
+
+#define AUDIO_I2S_GPIO_MCLK GPIO_NUM_15   // I2S_MCLK
+#define AUDIO_I2S_GPIO_BCLK GPIO_NUM_16   // I2S_SCLK
+#define AUDIO_I2S_GPIO_WS   GPIO_NUM_18   // I2S_LRCK
+#define AUDIO_I2S_GPIO_DIN  GPIO_NUM_17   // I2S_ASDOUT (codec -> MCU)
+#define AUDIO_I2S_GPIO_DOUT GPIO_NUM_8    // I2S_DSDIN  (MCU -> codec)
+
+#define AUDIO_CODEC_PA_PIN       GPIO_NUM_7    // Voice_EN
+#define AUDIO_CODEC_I2C_SDA_PIN  GPIO_NUM_41
+#define AUDIO_CODEC_I2C_SCL_PIN  GPIO_NUM_42
+#define AUDIO_CODEC_ES8311_ADDR  ES8311_CODEC_DEFAULT_ADDR
+
+
+#define BUILTIN_LED_GPIO        GPIO_NUM_48
+#define BOOT_BUTTON_GPIO        GPIO_NUM_0
+#define TOUCH_BUTTON_GPIO       GPIO_NUM_47
+#define VOLUME_UP_BUTTON_GPIO   GPIO_NUM_40
+#define VOLUME_DOWN_BUTTON_GPIO GPIO_NUM_39
+
+#define DISPLAY_SDA_PIN GPIO_NUM_41
+#define DISPLAY_SCL_PIN GPIO_NUM_42
+#define DISPLAY_WIDTH   128
+
+#if CONFIG_OLED_SSD1306_128X32
+#define DISPLAY_HEIGHT  32
+#elif CONFIG_OLED_SSD1306_128X64
+#define DISPLAY_HEIGHT  64
+#elif CONFIG_OLED_SH1106_128X64
+#define DISPLAY_HEIGHT  64
+#define SH1106
+#else
+#error "OLED display type is not selected"
+#endif
+
+#define DISPLAY_MIRROR_X true
+#define DISPLAY_MIRROR_Y true
+
+
+// A MCP Test: Control a lamp (GPIO18 现在是 I2S WS，挪到 GPIO2)
+#define LAMP_GPIO GPIO_NUM_2
+
+#endif // _BOARD_CONFIG_H_

@@ -1,4 +1,4 @@
-﻿#include "custom_wake_word.h"
+#include "custom_wake_word.h"
 #include "audio_service.h"
 #include "system_info.h"
 #include "assets.h"
@@ -133,7 +133,16 @@ void CustomWakeWord::OnWakeWordDetected(std::function<void(const std::string& wa
 }
 
 void CustomWakeWord::Start() {
+    // Reset recognizer state so re-arming after a conversation behaves like the first arm.
+    {
+        std::lock_guard<std::mutex> lock(input_buffer_mutex_);
+        input_buffer_.clear();
+    }
+    if (multinet_model_data_ != nullptr) {
+        multinet_->clean(multinet_model_data_);
+    }
     running_ = true;
+    ESP_LOGI(TAG, "CustomWakeWord armed");
 }
 
 void CustomWakeWord::Stop() {
@@ -152,6 +161,14 @@ void CustomWakeWord::Feed(const std::vector<int16_t>& data) {
     // Check running state inside lock to avoid TOCTOU race with Stop()
     if (!running_) {
         return;
+    }
+
+    // Diagnostic: proves audio is actually reaching the recognizer (~1s cadence)
+    {
+        static uint32_t feed_calls = 0;
+        if ((++feed_calls % 100) == 0) {
+            ESP_LOGI(TAG, "feed alive: calls=%u buf=%u", (unsigned)feed_calls, (unsigned)input_buffer_.size());
+        }
     }
 
     // If input channels is 2, we need to fetch the left channel data

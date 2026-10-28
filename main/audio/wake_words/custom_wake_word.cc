@@ -1,4 +1,4 @@
-#include "custom_wake_word.h"
+﻿#include "custom_wake_word.h"
 #include "audio_service.h"
 #include "system_info.h"
 #include "assets.h"
@@ -8,6 +8,7 @@
 #include <esp_mn_models.h>
 #include <esp_mn_speech_commands.h>
 #include <cJSON.h>
+#include <cmath>
 
 #define TAG "CustomWakeWord"
 
@@ -103,7 +104,7 @@ bool CustomWakeWord::Initialize(AudioCodec* codec, srmodel_list_t* models_list) 
         return false;
     }
 
-    // 初始化 multinet (命令词识别)
+    // 鍒濆鍖?multinet (鍛戒护璇嶈瘑鍒?
     mn_name_ = esp_srmodel_filter(models_, ESP_MN_PREFIX, language_.c_str());
     if (mn_name_ == nullptr) {
         ESP_LOGW(TAG, "Language '%s' multinet not found, falling back to any multinet model", language_.c_str());
@@ -167,7 +168,17 @@ void CustomWakeWord::Feed(const std::vector<int16_t>& data) {
     while (input_buffer_.size() >= chunksize) {
         std::vector<int16_t> chunk(input_buffer_.begin(), input_buffer_.begin() + chunksize);
         StoreWakeWordData(chunk);
-        
+
+        // DEBUG: report mic level so we can tell "no audio" from "no match"
+        {
+            static int dbg_count = 0;
+            if ((++dbg_count % 60) == 0) {
+                double acc = 0;
+                for (auto s : chunk) acc += (double)s * s;
+                ESP_LOGI(TAG, "mic rms=%d chunk=%d", (int)sqrt(acc / chunk.size()), chunksize);
+            }
+        }
+
         esp_mn_state_t mn_state = multinet_->detect(multinet_model_data_, chunk.data());
         
         if (mn_state == ESP_MN_STATE_DETECTED) {

@@ -254,6 +254,18 @@ void Application::Run() {
             if (clock_ticks_ % 10 == 0) {
                 SystemInfo::PrintHeapStats();
             }
+
+            // Hang up a while after the user said goodbye, instead of waiting for the server timeout
+            if (farewell_ticks_ > 0) {
+                if (--farewell_ticks_ == 0) {
+                    farewell_ticks_ = -1;
+                    ESP_LOGI(TAG, "Farewell countdown finished, closing conversation");
+                    if (protocol_ != nullptr && protocol_->IsAudioChannelOpened()) {
+                        protocol_->CloseAudioChannel();
+                    }
+                    SetDeviceState(kDeviceStateIdle);
+                }
+            }
         }
     }
 }
@@ -554,6 +566,18 @@ void Application::InitializeProtocol() {
                 Schedule([display, message = std::string(text->valuestring)]() {
                     display->SetChatMessage("user", message.c_str());
                 });
+
+                // Treat a farewell phrase as "hang up": let the reply play, then close the session.
+                static const char* kFarewellWords[] = {
+                    "不聊了", "再见", "拜拜", "晚安", "先这样", "回头见", "挂了吧"
+                };
+                for (auto word : kFarewellWords) {
+                    if (strstr(text->valuestring, word) != nullptr) {
+                        ESP_LOGI(TAG, "Farewell phrase detected: %s", word);
+                        farewell_ticks_ = 6;
+                        break;
+                    }
+                }
             }
         } else if (strcmp(type->valuestring, "llm") == 0) {
             auto emotion = cJSON_GetObjectItem(root, "emotion");

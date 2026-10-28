@@ -141,6 +141,8 @@ private:
     bool assets_version_checked_ = false;
     bool play_popup_on_listening_ = false;  // Flag to play popup sound after state changes to listening
     int clock_ticks_ = 0;
+    // Countdown (seconds) to hang up after a farewell phrase; -1 = no pending farewell
+    int farewell_ticks_ = -1;
     TaskHandle_t activation_task_handle_ = nullptr;
 
 

@@ -163,11 +163,15 @@ void CustomWakeWord::Feed(const std::vector<int16_t>& data) {
         return;
     }
 
-    // Diagnostic: proves audio is actually reaching the recognizer (~1s cadence)
+    // Diagnostic: proves audio is reaching the recognizer and whether it is silence
     {
         static uint32_t feed_calls = 0;
+        static long acc = 0;
+        for (auto s : data) acc += (s < 0 ? -s : s);
         if ((++feed_calls % 100) == 0) {
-            ESP_LOGI(TAG, "feed alive: calls=%u buf=%u", (unsigned)feed_calls, (unsigned)input_buffer_.size());
+            int level = data.empty() ? 0 : (int)(acc / (long)data.size() / 100);
+            ESP_LOGI(TAG, "feed alive: calls=%u buf=%u level=%d", (unsigned)feed_calls, (unsigned)input_buffer_.size(), level);
+            acc = 0;
         }
     }
 

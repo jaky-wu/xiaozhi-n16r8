@@ -1,4 +1,4 @@
-﻿#include "audio_service.h"
+#include "audio_service.h"
 #include <esp_log.h>
 #include <cstring>
 
@@ -570,6 +570,10 @@ void AudioService::EnableWakeWordDetection(bool enable) {
         }
         wake_word_->Start();
         xEventGroupSetBits(event_group_, AS_EVENT_WAKE_WORD_RUNNING);
+        // Make sure the microphone keeps capturing after leaving a conversation
+        if (codec_ != nullptr) {
+            codec_->EnableInput(true);
+        }
     } else {
         wake_word_->Stop();
         xEventGroupClearBits(event_group_, AS_EVENT_WAKE_WORD_RUNNING);

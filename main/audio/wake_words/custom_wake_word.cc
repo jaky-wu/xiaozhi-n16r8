@@ -133,14 +133,34 @@ void CustomWakeWord::OnWakeWordDetected(std::function<void(const std::string& wa
 }
 
 void CustomWakeWord::Start() {
-    // Reset recognizer state so re-arming after a conversation behaves like the first arm.
     {
         std::lock_guard<std::mutex> lock(input_buffer_mutex_);
         input_buffer_.clear();
     }
-    if (multinet_model_data_ != nullptr) {
-        multinet_->clean(multinet_model_data_);
+
+    // The multinet instance stops reporting detections once it has been stopped
+    // (i.e. after any conversation). Recreate it so that every return to idle
+    // behaves exactly like the first arm after boot.
+    if (multinet_ != nullptr && mn_name_ != nullptr) {
+        if (multinet_model_data_ != nullptr) {
+            multinet_->destroy(multinet_model_data_);
+            multinet_model_data_ = nullptr;
+        }
+        multinet_model_data_ = multinet_->create(mn_name_, duration_);
+        if (multinet_model_data_ != nullptr) {
+            multinet_->set_det_threshold(multinet_model_data_, threshold_);
+            esp_mn_commands_clear();
+            for (size_t i = 0; i < commands_.size(); i++) {
+                esp_mn_commands_add((int)(i + 1), commands_[i].command.c_str());
+            }
+            esp_mn_commands_update();
+            ESP_LOGI(TAG, "recognizer recreated: commands=%u threshold=%.2f",
+                     (unsigned)commands_.size(), threshold_);
+        } else {
+            ESP_LOGE(TAG, "failed to recreate recognizer");
+        }
     }
+
     running_ = true;
     ESP_LOGI(TAG, "CustomWakeWord armed");
 }

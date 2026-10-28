@@ -24,7 +24,7 @@ jobs:
       - name: Show sizes
         shell: bash
         run: |
-          ls -l build/xiaozhi.bin build/bootloader/bootloader.bin build/partition_table/partition-table.bin
+          ls -l build/xiaozhi.bin build/bootloader/bootloader.bin build/partition_table/partition-table.bin build/generated_assets.bin
 
       - name: Upload bins
         uses: actions/upload-artifact@v4
@@ -34,3 +34,4 @@ jobs:
             build/bootloader/bootloader.bin
             build/partition_table/partition-table.bin
             build/xiaozhi.bin
+            build/generated_assets.bin

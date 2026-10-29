@@ -1,4 +1,4 @@
-﻿#include "wifi_board.h"
+#include "wifi_board.h"
 #include "codecs/es8311_audio_codec.h"
 #include "dog_motor.h"
 #include "display/oled_display.h"
@@ -148,17 +148,15 @@ private:
         });
     }
 
-    // 鐗╄仈缃戝垵濮嬪寲锛岄€愭杩佺Щ鍒?MCP 鍗忚
+    // 物联网初始化，逐步迁移到 MCP 协议
     void InitializeTools() {
         static LampController lamp(LAMP_GPIO);
 
-        auto& dog = DogMotor::GetInstance();
-        dog.Init();
-
+        DogMotor::GetInstance().Init();
         auto& mcp_server = McpServer::GetInstance();
 
         mcp_server.AddTool("self.dog.move",
-            "璁╂満鍣ㄧ嫍鍔ㄨ捣鏉ャ€俤irection 鍙栧€?forward/back/left/right锛泂peed 0-100锛沝uration_ms 姣锛屾渶闀?4000锛屽埌鐐硅嚜鍔ㄥ仠",
+            "让机器狗动起来。direction: forward/back/left/right; speed: 0-100; duration_ms: 100-4000",
             PropertyList({
                 Property("direction", kPropertyTypeString),
                 Property("speed", kPropertyTypeInteger, 0, 100),
@@ -172,13 +170,13 @@ private:
                 return true;
             });
 
-        mcp_server.AddTool("self.dog.stop", "绔嬪埢鍋滀笅鏈哄櫒鐙?, PropertyList(),
+        mcp_server.AddTool("self.dog.stop", "Stop the robot dog immediately", PropertyList(),
             [](const PropertyList& properties) -> ReturnValue {
                 DogMotor::GetInstance().Stop();
                 return true;
             });
 
-        mcp_server.AddTool("self.dog.status", "鏌ヨ鏈哄櫒鐙楀綋鍓嶅姩浣滃拰閫熷害", PropertyList(),
+        mcp_server.AddTool("self.dog.status", "Get current movement direction and speed", PropertyList(),
             [](const PropertyList& properties) -> ReturnValue {
                 return DogMotor::GetInstance().Status();
             });
@@ -202,7 +200,7 @@ public:
     }
 
     virtual AudioCodec* GetAudioCodec() override {
-        // ES8311 鎸傚湪 OLED 鍚屼竴鏉?I2C 鎬荤嚎锛圫DA41/SCL42锛変笂
+        // ES8311 挂在 OLED 同一条 I2C 总线（SDA41/SCL42）上
         static Es8311AudioCodec audio_codec(
             display_i2c_bus_, I2C_NUM_0, AUDIO_INPUT_SAMPLE_RATE, AUDIO_OUTPUT_SAMPLE_RATE,
             AUDIO_I2S_GPIO_MCLK, AUDIO_I2S_GPIO_BCLK, AUDIO_I2S_GPIO_WS,

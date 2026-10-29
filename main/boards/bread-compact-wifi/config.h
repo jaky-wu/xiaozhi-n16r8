@@ -48,4 +48,16 @@
 // A MCP Test: Control a lamp (GPIO18 现在是 I2S WS，挪到 GPIO2)
 #define LAMP_GPIO GPIO_NUM_2
 
+// ---- 机器狗电机（DRV8833 × 2，每片带 2 路）----
+// 0=左前 1=右前 2=左后 3=右后
+#define MOTOR_M1_IN1 GPIO_NUM_4
+#define MOTOR_M1_IN2 GPIO_NUM_5
+#define MOTOR_M2_IN1 GPIO_NUM_6
+#define MOTOR_M2_IN2 GPIO_NUM_9
+#define MOTOR_M3_IN1 GPIO_NUM_10
+#define MOTOR_M3_IN2 GPIO_NUM_11
+#define MOTOR_M4_IN1 GPIO_NUM_12
+#define MOTOR_M4_IN2 GPIO_NUM_13
+#define MOTOR_STBY   GPIO_NUM_14
+
 #endif // _BOARD_CONFIG_H_
